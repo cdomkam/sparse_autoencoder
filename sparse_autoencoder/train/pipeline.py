@@ -155,6 +155,9 @@ class Pipeline:
             ValueError: If the store size is not divisible by the batch size.
         """
         # Check the store size is divisible by the batch size
+        print("=======================")
+        print("CHECKING THE STORE SIZE")
+        print("=======================")
         if store_size % (self.source_data_batch_size * self.source_dataset.context_size) != 0:
             error_message = (
                 f"Store size must be divisible by the batch size ({self.source_data_batch_size}), "
@@ -163,6 +166,9 @@ class Pipeline:
             raise ValueError(error_message)
 
         # Setup the store
+        print("============================")
+        print("SETUP THE STORE")
+        print("============================")
         source_model_device = get_model_device(self.source_model)
         store = TensorActivationStore(
             store_size, self.n_input_features, n_components=self.n_components
@@ -170,22 +176,36 @@ class Pipeline:
 
         # Add the hook to the model (will automatically store the activations every time the model
         # runs)
+        print("============================")
+        print("ADD HOOK TO THE MODEL")
+        print("============================")
         self.source_model.remove_all_hook_fns()
         for component_idx, cache_name in enumerate(self.cache_names):
             hook = partial(store_activations_hook, store=store, component_idx=component_idx)
             self.source_model.add_hook(cache_name, hook)
 
         # Loop through the dataloader until the store reaches the desired size
+        print("============================")
+        print("LOOP THROUGH THE DATALOADER")
+        print("============================")
         with torch.no_grad():
+            print(f"current store length {len(store)}")
+            print(f"max store size {store_size}")
             while len(store) < store_size:
                 batch = next(self.source_data)
+                print("got batch")
                 input_ids: Int[Tensor, Axis.names(Axis.SOURCE_DATA_BATCH, Axis.POSITION)] = batch[
                     "input_ids"
                 ].to(source_model_device)
+                print("got input ids")
                 self.source_model.forward(
                     input_ids, stop_at_layer=self.layer + 1, prepend_bos=False
                 )  # type: ignore (TLens is typed incorrectly)
+                print("moving forward")
 
+        print("============================")
+        print("REMOVING HOOKS")
+        print("============================")
         self.source_model.remove_all_hook_fns()
         store.shuffle()
 
@@ -362,6 +382,9 @@ class Pipeline:
         self.source_model.eval()  # Set the source model to evaluation (inference) mode
 
         # Get the store size
+        print(f"MAX_STORE_SIZE:{max_store_size}")
+        print(f"source_data_batch_size:{self.source_data_batch_size}")
+        print(f"source_dataset_context_size:{self.source_dataset.context_size}")
         store_size: int = max_store_size - max_store_size % (
             self.source_data_batch_size * self.source_dataset.context_size
         )

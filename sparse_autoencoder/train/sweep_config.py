@@ -21,10 +21,14 @@ from sparse_autoencoder.train.utils.wandb_sweep_types import (
 
 
 # Key default values (used to calculate other default values)
-DEFAULT_SOURCE_BATCH_SIZE: int = 16
-DEFAULT_SOURCE_CONTEXT_SIZE: int = 256
-DEFAULT_BATCH_SIZE: int = 8192  # Should be a multiple of source batch size and context size
-DEFAULT_STORE_SIZE: int = round_to_multiple(3_000_000, DEFAULT_BATCH_SIZE)
+# DEFAULT_SOURCE_BATCH_SIZE: int = 16
+DEFAULT_SOURCE_BATCH_SIZE: int = 2
+# DEFAULT_SOURCE_CONTEXT_SIZE: int = 256
+DEFAULT_SOURCE_CONTEXT_SIZE: int = 4
+# DEFAULT_BATCH_SIZE: int = 8192  # Should be a multiple of source batch size and context size
+DEFAULT_BATCH_SIZE: int = 8  # Should be a multiple of source batch size and context size
+# DEFAULT_STORE_SIZE: int = round_to_multiple(3_000_000, DEFAULT_BATCH_SIZE)
+DEFAULT_STORE_SIZE: int = round_to_multiple(10, DEFAULT_BATCH_SIZE)
 
 
 @dataclass(frozen=True)
@@ -47,7 +51,8 @@ class ActivationResamplerHyperparameters(NestedParameter):
     Number of autoencoder learned activation vectors to collate before resampling.
     """
 
-    resample_dataset_size: Parameter[int] = field(default=Parameter(DEFAULT_BATCH_SIZE * 100))
+    # resample_dataset_size: Parameter[int] = field(default=Parameter(DEFAULT_BATCH_SIZE * 100))
+    resample_dataset_size: Parameter[int] = field(default=Parameter(DEFAULT_BATCH_SIZE))
     """Resample dataset size.
 
     Number of autoencoder input activations to use for calculating the loss, as part of the
